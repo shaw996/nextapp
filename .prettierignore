@@ -1,14 +1,22 @@
-.DS_Store
-.husky
-dist
-node_modules
-pnpm-lock.yaml
 !.vscode
 !.*.js
 !.*.cjs
 !.*.mjs
 !.*.ts
+public
+server
 
-.github
-.eslintrc
-.lintstagedrc.mjs
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Build
+dist
+
+# Node
+node_modules
+pnpm-lock.yaml
+
+# Husky
+.husky
