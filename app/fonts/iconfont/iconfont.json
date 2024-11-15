@@ -1,0 +1,65 @@
+{
+  "id": "4573961",
+  "name": "刘捣蛋",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "4586557",
+      "name": "plus",
+      "font_class": "plus",
+      "unicode": "e95e",
+      "unicode_decimal": 59742
+    },
+    {
+      "icon_id": "11343171",
+      "name": "close",
+      "font_class": "close",
+      "unicode": "e79d",
+      "unicode_decimal": 59293
+    },
+    {
+      "icon_id": "35078603",
+      "name": "lighting-fill",
+      "font_class": "lighting-fill",
+      "unicode": "e6bc",
+      "unicode_decimal": 59068
+    },
+    {
+      "icon_id": "5634384",
+      "name": "sort-up",
+      "font_class": "sort-up",
+      "unicode": "f0c8",
+      "unicode_decimal": 61640
+    },
+    {
+      "icon_id": "13434541",
+      "name": "search",
+      "font_class": "search",
+      "unicode": "e65f",
+      "unicode_decimal": 58975
+    },
+    {
+      "icon_id": "20387674",
+      "name": "filter",
+      "font_class": "filter",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "21823923",
+      "name": "tickets",
+      "font_class": "tickets",
+      "unicode": "e67e",
+      "unicode_decimal": 59006
+    },
+    {
+      "icon_id": "40072257",
+      "name": "pie-fill",
+      "font_class": "pie-fill",
+      "unicode": "eaed",
+      "unicode_decimal": 60141
+    }
+  ]
+}
