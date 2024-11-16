@@ -3,7 +3,10 @@
 import { Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from '@nextui-org/react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { RefObject, createContext, useContext, useEffect, useRef, useState } from 'react';
+
+import { intersect } from '@/utils/compute';
+import mcn from '@/utils/mcn';
 
 export default function Home() {
   const [searchEngineIndex, setSearchEngineIndex] = useState(0);
@@ -204,6 +207,107 @@ const Favorites = [
   },
 ];
 
+// const Collections: RootCollection = [
+//   {
+//     children: [
+//       {
+//         id: '1-1',
+//         logo: '/logo/Baidu.png',
+//         name: 'Baidu',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.baidu.com/s?wd=',
+//       },
+//       {
+//         id: '1-2',
+
+//         logo: '/logo/google.png',
+//         name: 'Google',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.google.com/search?q=',
+//       },
+//       {
+//         id: '1-3',
+
+//         logo: '/logo/bing.png',
+//         name: 'Bing',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//       {
+//         id: '1-4',
+
+//         logo: '/logo/bing.png',
+//         name: 'BingBingBingBingBingBing',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//       {
+//         id: '1-5',
+
+//         logo: '/logo/bing.png',
+//         name: 'BingBingBingBingBingBing1',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//       {
+//         id: '1-6',
+
+//         logo: '/logo/google.png',
+//         name: 'Google',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.google.com/search?q=',
+//       },
+//       {
+//         id: '1-7',
+
+//         logo: '/logo/bing.png',
+//         name: 'Bing',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//       {
+//         id: '1-8',
+
+//         logo: '/logo/bing.png',
+//         name: 'BingBingBingBingBingBing',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//       {
+//         id: '1-9',
+
+//         logo: '/logo/bing.png',
+//         name: 'BingBingBingBingBingBing1',
+//         ref: null,
+//         type: 'item',
+//         url: 'https://www.bing.com/search?q=',
+//       },
+//     ],
+//     id: '1',
+
+//     name: '收藏',
+//     ref: null,
+//     type: 'group',
+//   },
+//   {
+//     id: '2',
+
+//     logo: '/logo/Baidu.png',
+//     name: 'Baidu',
+//     ref: null,
+//     type: 'item',
+//     url: 'https://www.baidu.com/s?wd=',
+//   },
+// ];
+
 const Collections: RootCollection = [
   {
     children: [
@@ -211,138 +315,177 @@ const Collections: RootCollection = [
         id: '1-1',
         logo: '/logo/Baidu.png',
         name: 'Baidu',
+        ref: null,
         type: 'item',
         url: 'https://www.baidu.com/s?wd=',
       },
       {
         id: '1-2',
+
         logo: '/logo/google.png',
         name: 'Google',
+        ref: null,
         type: 'item',
         url: 'https://www.google.com/search?q=',
       },
       {
         id: '1-3',
+
         logo: '/logo/bing.png',
         name: 'Bing',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
         id: '1-4',
+
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
         id: '1-5',
+
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing1',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
         id: '1-6',
+
         logo: '/logo/google.png',
         name: 'Google',
+        ref: null,
         type: 'item',
         url: 'https://www.google.com/search?q=',
       },
       {
         id: '1-7',
+
         logo: '/logo/bing.png',
         name: 'Bing',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
         id: '1-8',
+
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
         id: '1-9',
+
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing1',
+        ref: null,
         type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
     ],
     id: '1',
+
     name: '收藏',
+    ref: null,
     type: 'group',
   },
   {
     id: '2',
+
     logo: '/logo/Baidu.png',
     name: 'Baidu',
+    ref: null,
     type: 'item',
     url: 'https://www.baidu.com/s?wd=',
   },
   {
     id: '2-2',
+
     logo: '/logo/google.png',
     name: 'Google',
+    ref: null,
     type: 'item',
     url: 'https://www.google.com/search?q=',
   },
   {
     id: '2-3',
+
     logo: '/logo/bing.png',
     name: 'Bing',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
     id: '2-4',
+
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
     groupId: '2',
     id: '2-5',
+
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing1',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
     id: '3-1',
+
     logo: '/logo/Baidu.png',
     name: 'Baidu',
+    ref: null,
     type: 'item',
     url: 'https://www.baidu.com/s?wd=',
   },
   {
     id: '3-2',
+
     logo: '/logo/google.png',
     name: 'Google',
+    ref: null,
     type: 'item',
     url: 'https://www.google.com/search?q=',
   },
   {
     id: '3-3',
+
     logo: '/logo/bing.png',
     name: 'Bing',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
     id: '3-4',
+
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
     id: '3-5',
+
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing1',
+    ref: null,
     type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
@@ -353,57 +496,173 @@ interface CollectionItem {
   id: string;
   logo: string;
   name: string;
+  ref: RefObject<HTMLElement> | null;
   type: 'item';
   url: string;
 }
 
-interface CollectionGroup {
+interface CollectionGroupItem {
   children: CollectionItem[];
   id: string;
   name: string;
+  ref: RefObject<HTMLElement> | null;
   type: 'group';
 }
 
-type RootCollection = (CollectionItem | CollectionGroup)[];
+type RootCollection = (CollectionItem | CollectionGroupItem)[];
 
-const CollectionGroup = ({ data }: { data: CollectionGroup }) => {
-  const ref = useRef<HTMLDivElement>(null);
+const CollectionItemMask = ({ isOpen }: { isOpen: boolean }) => {
+  return (
+    <motion.div
+      className="CollectionItemMask absolute inset-0 bg-black/30 rounded-lg"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isOpen ? 1 : 0 }}
+      transition={{
+        duration: 0.15,
+        ease: 'easeInOut',
+      }}
+    ></motion.div>
+  );
+};
+
+const CollectionItem = ({
+  data,
+  parentRef,
+}: {
+  data: CollectionItem | CollectionGroupItem;
+  parentRef: RefObject<HTMLElement>;
+}) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { children, logo, name, type } = data as any;
+  const childrenOutlined = children?.slice(0, 9);
+
+  const selfRef = useRef<HTMLElement>(null);
+  const collectionsListRef = useRef<HTMLUListElement>(null);
+
+  const {
+    collections,
+    draggingItem,
+    mouseEnterItem,
+    setCollections,
+    setDraggingItem,
+    setMouseEnterItem,
+  } = useContext(CollectionsContext);
+
+  const [isDragging, setIsDragging] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const { children, name } = data;
-  const childrenOutlined = children.slice(0, 9);
+  const isMouseEnter = mouseEnterItem?.id === data.id;
+
+  const openGroup = () => {
+    if (isDragging) return;
+    onOpen();
+  };
+
+  const onDragStart = () => {
+    setIsDragging(true);
+    setDraggingItem(data);
+  };
+
+  const onDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const onMouseUp = () => {
+    setDraggingItem(null);
+    setMouseEnterItem(null);
+  };
+
+  const onMouseMove = () => {
+    if (!draggingItem || draggingItem.id !== data.id) return;
+
+    const draggingBox = draggingItem.ref!.current!;
+    const target = collections.find((item) => {
+      if (item.id === draggingItem.id) return false;
+
+      const isIntersecting = intersect(draggingBox, item.ref!.current!);
+
+      return isIntersecting;
+    });
+
+    setMouseEnterItem(target || null);
+  };
+
+  useEffect(() => {
+    if (selfRef.current) {
+      data.ref = selfRef;
+      setCollections([...collections]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <>
-      <li className="CollectionGroup flex items-center justify-center px-[25%] w-full h-full cursor-pointer outline-none">
-        <motion.figure
-          ref={ref}
-          className="CollectionGroupFigure flex-col items-center justify-center w-full"
-          whileHover={{ scale: 1.05 }}
-          transition={{
-            damping: 20,
-            stiffness: 260,
-            type: 'spring',
+    <motion.li
+      className={mcn(
+        'CollectionItem flex items-center justify-center mx-[25%] w-1/2 h-full cursor-pointer outline-none',
+      )}
+      animate={{
+        zIndex: isDragging ? 10 : 0,
+      }}
+      transition={{
+        zIndex: {
+          delay: isDragging ? 0 : 5,
+        },
+      }}
+    >
+      <motion.figure
+        className="CollectionItemFigure flex-col items-center justify-center w-full"
+        ref={selfRef}
+        animate={{
+          scale: isDragging ? 1.1 : isMouseEnter ? 1.5 : 1,
+        }}
+        transition={{
+          damping: 20,
+          stiffness: 260,
+          type: 'spring',
+        }}
+        drag
+        dragConstraints={parentRef}
+        dragElastic={1}
+        dragSnapToOrigin
+        onClick={openGroup}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        <div className="CollectionItemLogo relative w-full bg-white/40 rounded-lg pointer-events-none shadow-md overflow-hidden">
+          {type === 'group' ? (
+            <ul className="CollectionGroupItemsOutline grid grid-cols-3 grid-rows-3 relative p-[10%] w-full h-full">
+              {(childrenOutlined as CollectionItem[]).map((item) => (
+                <li className="CollectionItem p-[12%] w-full h-full" key={item.id}>
+                  <Image
+                    src={item.logo}
+                    alt={item.name}
+                    width={32}
+                    height={32}
+                    className="rounded-sm"
+                  />
+                </li>
+              ))}
+
+              <CollectionItemMask isOpen={isDragging} />
+            </ul>
+          ) : (
+            <Image src={logo} alt={name} width={32} height={32} className="w-full" />
+          )}
+          <CollectionItemMask isOpen={isDragging} />
+        </div>
+        <motion.figcaption
+          className="CollectionItemName mt-1 text-center text-xs text-gray-500 truncate"
+          animate={{
+            height: isMouseEnter ? '8px' : '16px',
+            opacity: isMouseEnter ? 0 : 1,
           }}
-          onClick={onOpen}
         >
-          <ul className="ChildrenOutline grid grid-cols-3 grid-rows-3 p-[10%] w-full bg-white/40 rounded-lg pointer-events-none shadow-md overflow-hidden">
-            {childrenOutlined.map((item) => (
-              <li className="CollectionItem p-[12%] w-full h-full" key={item.id}>
-                <Image
-                  src={item.logo}
-                  alt={item.name}
-                  width={32}
-                  height={32}
-                  className="rounded-sm"
-                />
-              </li>
-            ))}
-          </ul>
-          <figcaption className="CollectionGroupName mt-1 text-center text-xs text-gray-500 truncate">
-            {name}
-          </figcaption>
-        </motion.figure>
+          {name}
+        </motion.figcaption>
+      </motion.figure>
+      {type === 'group' && (
         <Modal
           isOpen={isOpen}
           backdrop="blur"
@@ -421,55 +680,51 @@ const CollectionGroup = ({ data }: { data: CollectionGroup }) => {
               <h1 className="mb-4 text-center text-white text-2xl font-semibold">{name}</h1>
             </ModalHeader>
             <ModalBody>
-              <ul className="CollectionsList flex-1 grid grid-cols-8 grid-rows-5 gap-6 p-8 w-full bg-white/40 rounded-3xl">
-                {children.map((item) => (
-                  <CollectionItem data={item} key={item.id} />
+              <ul
+                ref={collectionsListRef}
+                className="CollectionsList flex-1 grid grid-cols-8 grid-rows-5 gap-6 p-8 w-full bg-white/40 rounded-3xl"
+              >
+                {(children as CollectionItem[]).map((item) => (
+                  <CollectionItem key={item.id} data={item} parentRef={collectionsListRef} />
                 ))}
               </ul>
             </ModalBody>
           </ModalContent>
         </Modal>
-      </li>
-    </>
+      )}
+    </motion.li>
   );
 };
 
-const CollectionItem = ({ data }: { data: CollectionItem }) => {
-  const { logo, name, url } = data;
-  const openCollectionItem = () => {
-    window.open(url);
-  };
+interface CollectionsProviderProps {
+  collections: RootCollection;
+  draggingItem: CollectionItem | CollectionGroupItem | null;
+  mouseEnterItem: CollectionItem | CollectionGroupItem | null;
+  setCollections: (collections: RootCollection) => void;
+  setDraggingItem: (item: CollectionItem | CollectionGroupItem | null) => void;
+  setMouseEnterItem: (item: CollectionItem | CollectionGroupItem | null) => void;
+}
 
-  return (
-    <li
-      className="CollectionItem flex items-center justify-center px-[25%] w-full h-full cursor-pointer"
-      onClick={openCollectionItem}
-    >
-      <motion.figure
-        className="CollectionItemFigure flex-col items-center justify-center w-full"
-        whileHover={{ scale: 1.05 }}
-        transition={{
-          damping: 20,
-          stiffness: 260,
-          type: 'spring',
-        }}
-      >
-        <Image
-          src={logo}
-          alt={name}
-          width={32}
-          height={32}
-          className="w-full rounded-lg pointer-events-none shadow-md"
-        />
-        <figcaption className="CollectionItemName mt-1 text-center text-xs text-gray-500 truncate">
-          {name}
-        </figcaption>
-      </motion.figure>
-    </li>
-  );
-};
+const CollectionsContext = createContext<CollectionsProviderProps>({
+  collections: [],
+  draggingItem: null,
+  mouseEnterItem: null,
+  setCollections: () => {},
+  setDraggingItem: () => {},
+  setMouseEnterItem: () => {},
+});
 
 const CollectionsContainer = () => {
+  const collectionsListRef = useRef<HTMLUListElement>(null);
+
+  const [collections, setCollections] = useState<RootCollection>([...Collections]);
+  const [draggingItem, setDraggingItem] = useState<CollectionItem | CollectionGroupItem | null>(
+    null,
+  );
+  const [mouseEnterItem, setMouseEnterItem] = useState<CollectionItem | CollectionGroupItem | null>(
+    null,
+  );
+
   return (
     <div className="Collections flex-none flex flex-col px-8 py-4 w-2/3 bg-blue-200">
       <div className="CollectionsSearch flex items-center justify-center mb-4">
@@ -479,15 +734,25 @@ const CollectionsContainer = () => {
           type="text"
         />
       </div>
-      <ul className="CollectionsList flex-1 grid grid-cols-10 grid-rows-4 mx-auto p-4 w-full h-0 bg-yellow-200">
-        {Collections.map((item) =>
-          item.type === 'group' ? (
-            <CollectionGroup data={item} key={item.id} />
-          ) : (
-            <CollectionItem data={item} key={item.id} />
-          ),
-        )}
-      </ul>
+      <CollectionsContext.Provider
+        value={{
+          collections,
+          draggingItem,
+          mouseEnterItem,
+          setCollections,
+          setDraggingItem,
+          setMouseEnterItem,
+        }}
+      >
+        <ul
+          ref={collectionsListRef}
+          className="CollectionsList flex-1 grid grid-cols-10 grid-rows-4 mx-auto p-4 w-full h-0 bg-yellow-200"
+        >
+          {collections.map((item) => (
+            <CollectionItem key={item.id} data={item} parentRef={collectionsListRef} />
+          ))}
+        </ul>
+      </CollectionsContext.Provider>
     </div>
   );
 };
