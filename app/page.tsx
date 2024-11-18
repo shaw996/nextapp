@@ -514,7 +514,7 @@ type RootCollection = (CollectionItem | CollectionGroupItem)[];
 const CollectionItemMask = ({ isOpen }: { isOpen: boolean }) => {
   return (
     <motion.div
-      className="CollectionItemMask absolute inset-0 bg-black/30 rounded-lg"
+      className="CollectionItemMask absolute inset-0 bg-black/30"
       initial={{ opacity: 0 }}
       animate={{ opacity: isOpen ? 1 : 0 }}
       transition={{
@@ -551,7 +551,10 @@ const CollectionItem = ({
   const [isDragging, setIsDragging] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+  const isGroup = type === 'group';
   const isMouseEnter = mouseEnterItem?.id === data.id;
+  const isGroupMouseEnter = isMouseEnter && isGroup;
+  const isItemMouseEnter = isMouseEnter && !isGroup;
 
   const openGroup = () => {
     if (isDragging) return;
@@ -612,14 +615,6 @@ const CollectionItem = ({
       <motion.figure
         className="CollectionItemFigure flex-col items-center justify-center w-full"
         ref={selfRef}
-        animate={{
-          scale: isDragging ? 1.1 : isMouseEnter ? 1.5 : 1,
-        }}
-        transition={{
-          damping: 20,
-          stiffness: 260,
-          type: 'spring',
-        }}
         drag
         dragConstraints={parentRef}
         dragElastic={1}
@@ -630,8 +625,24 @@ const CollectionItem = ({
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
       >
-        <div className="CollectionItemLogo relative w-full bg-white/40 rounded-lg pointer-events-none shadow-md overflow-hidden">
-          {type === 'group' ? (
+        <motion.div
+          className={mcn(
+            'CollectionItemLogo relative w-full bg-white/40 rounded-lg shadow-md overflow-hidden pointer-events-none box-content',
+          )}
+          animate={{
+            border: isItemMouseEnter ? '4px solid rgba(0, 0, 0, 0.5)' : '0 solid transparent',
+            scale: isDragging ? 1.1 : isGroupMouseEnter ? 1.5 : 1,
+          }}
+          initial={{
+            border: '0 solid transparent',
+          }}
+          transition={{
+            damping: 20,
+            stiffness: 260,
+            type: 'spring',
+          }}
+        >
+          {isGroup ? (
             <ul className="CollectionGroupItemsOutline grid grid-cols-3 grid-rows-3 relative p-[10%] w-full h-full">
               {(childrenOutlined as CollectionItem[]).map((item) => (
                 <li className="CollectionItem p-[12%] w-full h-full" key={item.id}>
@@ -650,8 +661,9 @@ const CollectionItem = ({
           ) : (
             <Image src={logo} alt={name} width={32} height={32} className="w-full" />
           )}
-          <CollectionItemMask isOpen={isDragging} />
-        </div>
+          <CollectionItemMask isOpen={isDragging || isItemMouseEnter} />
+          {/* <CollectionItemMask isOpen={true} /> */}
+        </motion.div>
         <motion.figcaption
           className="CollectionItemName mt-1 text-center text-xs text-gray-500 truncate"
           animate={{
@@ -662,7 +674,7 @@ const CollectionItem = ({
           {name}
         </motion.figcaption>
       </motion.figure>
-      {type === 'group' && (
+      {isGroup && (
         <Modal
           isOpen={isOpen}
           backdrop="blur"
