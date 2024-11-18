@@ -598,6 +598,42 @@ const CollectionItem = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (draggingItem && mouseEnterItem && isItemMouseEnter) {
+      timer = setTimeout(() => {
+        if (mouseEnterItem.id === data.id) {
+          const moustEnterItemIndex = collections.findIndex((item) => item.id === data.id);
+          const draggingItemIndex = collections.findIndex((item) => item.id === draggingItem.id);
+
+          collections.splice(moustEnterItemIndex, 1, {
+            children: [data as CollectionItem, draggingItem as CollectionItem],
+            id: new Date().valueOf() + '',
+            name: data.name,
+            type: 'group',
+          } as CollectionGroupItem);
+          collections.splice(draggingItemIndex, 1);
+          setCollections([...collections]);
+        }
+      }, 5000);
+
+      return () => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+      };
+    }
+  }, [
+    collections,
+    data,
+    draggingItem,
+    isGroupMouseEnter,
+    isItemMouseEnter,
+    mouseEnterItem,
+    setCollections,
+  ]);
+
   return (
     <motion.li
       className={mcn(
@@ -667,7 +703,7 @@ const CollectionItem = ({
         <motion.figcaption
           className="CollectionItemName mt-1 text-center text-xs text-gray-500 truncate"
           animate={{
-            height: isMouseEnter ? '8px' : '16px',
+            height: isGroupMouseEnter ? '8px' : isItemMouseEnter ? '14px' : '16px',
             opacity: isMouseEnter ? 0 : 1,
           }}
         >
