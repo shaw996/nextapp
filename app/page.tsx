@@ -1,24 +1,26 @@
 'use client';
 
-import { Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from '@nextui-org/react';
+import type { Dispatch, DragEvent, SetStateAction } from 'react';
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { RefObject, createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useEffect, useRef, useState } from 'react';
+import Sortable from 'sortablejs';
 
-import { intersect } from '@/utils/compute';
 import mcn from '@/utils/mcn';
 
 export default function Home() {
   const [searchEngineIndex, setSearchEngineIndex] = useState(0);
   const searchEngine = SearchEngines[searchEngineIndex];
+
+  const [keyword, setKeyword] = useState('');
+  const [isComposed, setIsComposed] = useState(false);
+
   // 切换搜索引擎
   const changeSearchEngine = () => {
     setSearchEngineIndex(searchEngineIndex < SearchEngines.length - 1 ? searchEngineIndex + 1 : 0);
   };
 
-  const [keyword, setKeyword] = useState('');
-
-  const [isComposed, setIsComposed] = useState(false);
   // 监听输入框Enter事件
   const listenInputEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const keywordTrimed = keyword.trim();
@@ -207,574 +209,491 @@ const Favorites = [
   },
 ];
 
-// const Collections: RootCollection = [
-//   {
-//     children: [
-//       {
-//         id: '1-1',
-//         logo: '/logo/Baidu.png',
-//         name: 'Baidu',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.baidu.com/s?wd=',
-//       },
-//       {
-//         id: '1-2',
+interface CollectionBase {
+  groupId: string;
+  id: string;
+  name: string;
+  ref?: HTMLDivElement;
+}
 
-//         logo: '/logo/google.png',
-//         name: 'Google',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.google.com/search?q=',
-//       },
-//       {
-//         id: '1-3',
+interface CollectionItem extends CollectionBase {
+  logo: string;
+  url: string;
+}
 
-//         logo: '/logo/bing.png',
-//         name: 'Bing',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//       {
-//         id: '1-4',
+interface CollectionGroup extends CollectionBase {
+  children: CollectionItem[];
+}
 
-//         logo: '/logo/bing.png',
-//         name: 'BingBingBingBingBingBing',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//       {
-//         id: '1-5',
+type Collection = CollectionGroup | CollectionItem;
 
-//         logo: '/logo/bing.png',
-//         name: 'BingBingBingBingBingBing1',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//       {
-//         id: '1-6',
+interface ItemLayout {
+  width: number;
+  height: number;
+  mx: number;
+  pages: number;
+}
 
-//         logo: '/logo/google.png',
-//         name: 'Google',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.google.com/search?q=',
-//       },
-//       {
-//         id: '1-7',
-
-//         logo: '/logo/bing.png',
-//         name: 'Bing',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//       {
-//         id: '1-8',
-
-//         logo: '/logo/bing.png',
-//         name: 'BingBingBingBingBingBing',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//       {
-//         id: '1-9',
-
-//         logo: '/logo/bing.png',
-//         name: 'BingBingBingBingBingBing1',
-//         ref: null,
-//         type: 'item',
-//         url: 'https://www.bing.com/search?q=',
-//       },
-//     ],
-//     id: '1',
-
-//     name: '收藏',
-//     ref: null,
-//     type: 'group',
-//   },
-//   {
-//     id: '2',
-
-//     logo: '/logo/Baidu.png',
-//     name: 'Baidu',
-//     ref: null,
-//     type: 'item',
-//     url: 'https://www.baidu.com/s?wd=',
-//   },
-// ];
-
-const Collections: RootCollection = [
+const Collections: Collection[] = [
+  {
+    groupId: '0',
+    id: '2',
+    logo: '/logo/Baidu.png',
+    name: 'Baidu',
+    url: 'https://www.baidu.com/s?wd=',
+  },
   {
     children: [
       {
+        groupId: '1',
         id: '1-1',
         logo: '/logo/Baidu.png',
         name: 'Baidu',
-        ref: null,
-        type: 'item',
         url: 'https://www.baidu.com/s?wd=',
       },
       {
+        groupId: '1',
         id: '1-2',
-
         logo: '/logo/google.png',
         name: 'Google',
-        ref: null,
-        type: 'item',
         url: 'https://www.google.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-3',
-
         logo: '/logo/bing.png',
         name: 'Bing',
-        ref: null,
-        type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-4',
-
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing',
-        ref: null,
-        type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-5',
-
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing1',
-        ref: null,
-        type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-6',
-
         logo: '/logo/google.png',
         name: 'Google',
-        ref: null,
-        type: 'item',
         url: 'https://www.google.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-7',
-
         logo: '/logo/bing.png',
         name: 'Bing',
-        ref: null,
-        type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-8',
-
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing',
-        ref: null,
-        type: 'item',
         url: 'https://www.bing.com/search?q=',
       },
       {
+        groupId: '1',
         id: '1-9',
-
         logo: '/logo/bing.png',
         name: 'BingBingBingBingBingBing1',
-        ref: null,
-        type: 'item',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-10',
+        logo: '/logo/Baidu.png',
+        name: 'Baidu',
+        url: 'https://www.baidu.com/s?wd=',
+      },
+      {
+        groupId: '1',
+        id: '1-11',
+        logo: '/logo/google.png',
+        name: 'Google',
+        url: 'https://www.google.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-12',
+        logo: '/logo/bing.png',
+        name: 'Bing',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-13',
+        logo: '/logo/bing.png',
+        name: 'BingBingBingBingBingBing',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-14',
+        logo: '/logo/bing.png',
+        name: 'BingBingBingBingBingBing1',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-15',
+        logo: '/logo/google.png',
+        name: 'Google',
+        url: 'https://www.google.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-16',
+        logo: '/logo/bing.png',
+        name: 'Bing',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-17',
+        logo: '/logo/bing.png',
+        name: 'BingBingBingBingBingBing',
+        url: 'https://www.bing.com/search?q=',
+      },
+      {
+        groupId: '1',
+        id: '1-18',
+        logo: '/logo/bing.png',
+        name: 'BingBingBingBingBingBing1',
         url: 'https://www.bing.com/search?q=',
       },
     ],
+    groupId: '0',
     id: '1',
-
     name: '收藏',
-    ref: null,
-    type: 'group',
   },
   {
-    id: '2',
-
-    logo: '/logo/Baidu.png',
-    name: 'Baidu',
-    ref: null,
-    type: 'item',
-    url: 'https://www.baidu.com/s?wd=',
-  },
-  {
-    id: '2-2',
-
+    groupId: '0',
+    id: '3',
     logo: '/logo/google.png',
     name: 'Google',
-    ref: null,
-    type: 'item',
     url: 'https://www.google.com/search?q=',
   },
   {
-    id: '2-3',
-
+    groupId: '0',
+    id: '4',
     logo: '/logo/bing.png',
     name: 'Bing',
-    ref: null,
-    type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
-    id: '2-4',
-
+    groupId: '0',
+    id: '5',
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing',
-    ref: null,
-    type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
-    groupId: '2',
-    id: '2-5',
-
+    groupId: '0',
+    id: '6',
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing1',
-    ref: null,
-    type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
-    id: '3-1',
-
+    groupId: '0',
+    id: '7',
     logo: '/logo/Baidu.png',
     name: 'Baidu',
-    ref: null,
-    type: 'item',
     url: 'https://www.baidu.com/s?wd=',
   },
   {
-    id: '3-2',
-
+    groupId: '0',
+    id: '8',
     logo: '/logo/google.png',
     name: 'Google',
-    ref: null,
-    type: 'item',
     url: 'https://www.google.com/search?q=',
   },
   {
-    id: '3-3',
-
-    logo: '/logo/bing.png',
-    name: 'Bing',
-    ref: null,
-    type: 'item',
-    url: 'https://www.bing.com/search?q=',
-  },
-  {
-    id: '3-4',
-
+    groupId: '0',
+    id: '9',
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing',
-    ref: null,
-    type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
   {
-    id: '3-5',
-
+    groupId: '0',
+    id: '10',
+    logo: '/logo/bing.png',
+    name: 'Bing',
+    url: 'https://www.bing.com/search?q=',
+  },
+  {
+    groupId: '0',
+    id: '11',
     logo: '/logo/bing.png',
     name: 'BingBingBingBingBingBing1',
-    ref: null,
-    type: 'item',
     url: 'https://www.bing.com/search?q=',
   },
 ];
 
-interface CollectionItem {
-  groupId?: string;
-  id: string;
-  logo: string;
-  name: string;
-  ref: RefObject<HTMLElement> | null;
-  type: 'item';
-  url: string;
-}
-
-interface CollectionGroupItem {
-  children: CollectionItem[];
-  id: string;
-  name: string;
-  ref: RefObject<HTMLElement> | null;
-  type: 'group';
-}
-
-type RootCollection = (CollectionItem | CollectionGroupItem)[];
-
-const CollectionItemMask = ({ isOpen }: { isOpen: boolean }) => {
-  return (
-    <motion.div
-      className="CollectionItemMask absolute inset-0 bg-black/30"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isOpen ? 1 : 0 }}
-      transition={{
-        duration: 0.15,
-        ease: 'easeInOut',
-      }}
-    ></motion.div>
-  );
-};
-
 const CollectionItem = ({
   data,
-  parentRef,
+  dragEnterItem,
+  itemLayout,
+  setDragEnterItem,
 }: {
-  data: CollectionItem | CollectionGroupItem;
-  parentRef: RefObject<HTMLElement>;
+  data: Collection;
+  dragEnterItem: Collection | null;
+  setDragEnterItem: Dispatch<SetStateAction<Collection | null>>;
+  draggingItem: Collection | null;
+  itemLayout: ItemLayout;
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { children, logo, name, type } = data as any;
-  const childrenOutlined = children?.slice(0, 9);
+  const { height, mx, width } = itemLayout;
+  const { children, id, logo, name } = data as CollectionGroup & CollectionItem;
 
-  const selfRef = useRef<HTMLElement>(null);
-  const collectionsListRef = useRef<HTMLUListElement>(null);
+  const collectionItemRef = useRef<HTMLDivElement>(null);
+  const fakeChildrenListRef = useRef<HTMLUListElement>(null);
+  const firstAnchorRef = useRef<HTMLLIElement>(null);
+  const lastAnchorRef = useRef<HTMLLIElement>(null);
+  const sortableInst = useRef<Sortable | null>(null);
 
-  const {
-    collections,
-    draggingItem,
-    mouseEnterItem,
-    setCollections,
-    setDraggingItem,
-    setMouseEnterItem,
-  } = useContext(CollectionsContext);
+  const isDragEnter = dragEnterItem && dragEnterItem.id === id;
 
-  const [isDragging, setIsDragging] = useState(false);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const isItem = !children;
 
-  const isGroup = type === 'group';
-  const isMouseEnter = mouseEnterItem?.id === data.id;
-  const isGroupMouseEnter = isMouseEnter && isGroup;
-  const isItemMouseEnter = isMouseEnter && !isGroup;
+  useEffect(() => {
+    if (collectionItemRef.current) {
+      data.ref = collectionItemRef.current;
+    }
+  }, [data]);
 
-  const openGroup = () => {
-    if (isDragging) return;
-    onOpen();
-  };
+  useEffect(() => {
+    if (isDragEnter) {
+      lastAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      firstAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isDragEnter]);
 
-  const onDragStart = () => {
-    setIsDragging(true);
-    setDraggingItem(data);
-  };
+  useEffect(() => {
+    if (!children || !fakeChildrenListRef.current) {
+      return;
+    }
 
-  const onDragEnd = () => {
-    setIsDragging(false);
-  };
+    if (sortableInst.current) {
+      sortableInst.current.destroy();
+      sortableInst.current = null;
+    }
 
-  const onMouseUp = () => {
-    setDraggingItem(null);
-    setMouseEnterItem(null);
-  };
-
-  const onMouseMove = () => {
-    if (!draggingItem || draggingItem.id !== data.id) return;
-
-    const draggingBox = draggingItem.ref!.current!;
-    const target = collections.find((item) => {
-      if (item.id === draggingItem.id) return false;
-
-      const isIntersecting = intersect(draggingBox, item.ref!.current!);
-
-      return isIntersecting;
+    sortableInst.current = new Sortable(fakeChildrenListRef.current, {
+      animation: 150,
+      group: {
+        name: 'Collections',
+        pull: false,
+      },
+      // TODO onAdd: (evt: Sortable.SortableEvent) => {
+      onAdd: () => {
+        setDragEnterItem(null);
+      },
+      // TODO onChange: (evt: Sortable.SortableEvent) => {
+      onChange: () => {
+        setDragEnterItem(() => data);
+      },
+      sort: false,
     });
-
-    setMouseEnterItem(target || null);
-  };
-
-  useEffect(() => {
-    if (selfRef.current) {
-      data.ref = selfRef;
-      setCollections([...collections]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    if (draggingItem && mouseEnterItem && isItemMouseEnter) {
-      timer = setTimeout(() => {
-        if (mouseEnterItem.id === data.id) {
-          const moustEnterItemIndex = collections.findIndex((item) => item.id === data.id);
-          const draggingItemIndex = collections.findIndex((item) => item.id === draggingItem.id);
-
-          collections.splice(moustEnterItemIndex, 1, {
-            children: [data as CollectionItem, draggingItem as CollectionItem],
-            id: new Date().valueOf() + '',
-            name: data.name,
-            type: 'group',
-          } as CollectionGroupItem);
-          collections.splice(draggingItemIndex, 1);
-          setCollections([...collections]);
-        }
-      }, 5000);
-
-      return () => {
-        if (timer) {
-          clearTimeout(timer);
-        }
-      };
-    }
-  }, [
-    collections,
-    data,
-    draggingItem,
-    isGroupMouseEnter,
-    isItemMouseEnter,
-    mouseEnterItem,
-    setCollections,
-  ]);
+  }, [children, data, setDragEnterItem]);
 
   return (
-    <motion.li
-      className={mcn(
-        'CollectionItem flex items-center justify-center mx-[25%] w-1/2 h-full cursor-pointer outline-none',
-      )}
-      animate={{
-        zIndex: isDragging ? 10 : 0,
-      }}
-      transition={{
-        zIndex: {
-          delay: isDragging ? 0 : 5,
-        },
+    <li
+      className="CollectionItem flex items-center justify-center float-left"
+      style={{
+        height: height,
+        marginLeft: mx,
+        marginRight: mx,
+        width: width,
       }}
     >
-      <motion.figure
-        className="CollectionItemFigure flex-col items-center justify-center w-full"
-        ref={selfRef}
-        drag
-        dragConstraints={parentRef}
-        dragElastic={1}
-        dragSnapToOrigin
-        onClick={openGroup}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
+      <figure
+        className={mcn(
+          'CollectionItemDraggable flex-none w-full bg-transparent cursor-pointer select-none',
+        )}
       >
-        <motion.div
+        <div
           className={mcn(
-            'CollectionItemLogo relative w-full bg-white/40 rounded-lg shadow-md overflow-hidden pointer-events-none box-content',
+            'flex items-center justify-center relative mb-[10%] w-full rounded-[22%] shadow-md overflow-hidden transition-transform duration-100 ease-linear',
+            isDragEnter && 'scale-125',
           )}
-          animate={{
-            border: isItemMouseEnter ? '4px solid rgba(0, 0, 0, 0.5)' : '0 solid transparent',
-            scale: isDragging ? 1.1 : isGroupMouseEnter ? 1.5 : 1,
-          }}
-          initial={{
-            border: '0 solid transparent',
-          }}
-          transition={{
-            damping: 20,
-            stiffness: 260,
-            type: 'spring',
-          }}
+          ref={collectionItemRef}
         >
-          {isGroup ? (
-            <ul className="CollectionGroupItemsOutline grid grid-cols-3 grid-rows-3 relative p-[10%] w-full h-full">
-              {(childrenOutlined as CollectionItem[]).map((item) => (
-                <li className="CollectionItem p-[12%] w-full h-full" key={item.id}>
-                  <Image
-                    src={item.logo}
-                    alt={item.name}
-                    width={32}
-                    height={32}
-                    className="rounded-sm"
-                  />
-                </li>
-              ))}
-
-              <CollectionItemMask isOpen={isDragging} />
-            </ul>
+          {isItem ? (
+            <Image
+              src={logo}
+              alt={name}
+              width={32}
+              height={32}
+              className="w-full bg-white pointer-events-none"
+            />
           ) : (
-            <Image src={logo} alt={name} width={32} height={32} className="w-full" />
+            <div className="p-[12.5%] w-full aspect-square bg-white/50 backdrop-blur-md shadow-md overflow-hidden">
+              <ul className="relative grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden">
+                {children.map((item, i) => (
+                  <li
+                    key={item.id}
+                    className="CollectionItemChild flex-none w-full rounded-[22%] shadow-md overflow-hidden"
+                    ref={
+                      i === 0 ? firstAnchorRef : i === children.length - 1 ? lastAnchorRef : null
+                    }
+                  >
+                    <Image
+                      src={item.logo}
+                      alt={item.name}
+                      width={32}
+                      height={32}
+                      className="w-full bg-white pointer-events-none"
+                    />
+                  </li>
+                ))}
+
+                <ul
+                  className="absolute left-0 top-0 bottom-0 right-0 grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden"
+                  ref={fakeChildrenListRef}
+                >
+                  {Array(9)
+                    .fill(null)
+                    .map((item, i) => (
+                      <li
+                        key={i}
+                        className={mcn(
+                          'flex-none w-full rounded-[22%] shadow-md overflow-hidden',
+                          i === 8 ? 'FakeCollectionItemChildSortable' : 'FakeCollectionItemChild',
+                        )}
+                      >
+                        <div className="w-full aspect-square bg-[#bfa] pointer-events-none text-black text-[8px]">
+                          {i}
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </ul>
+            </div>
           )}
-          <CollectionItemMask isOpen={isDragging || isItemMouseEnter} />
-          {/* <CollectionItemMask isOpen={true} /> */}
-        </motion.div>
-        <motion.figcaption
-          className="CollectionItemName mt-1 text-center text-xs text-gray-500 truncate"
-          animate={{
-            height: isGroupMouseEnter ? '8px' : isItemMouseEnter ? '14px' : '16px',
-            opacity: isMouseEnter ? 0 : 1,
-          }}
+          {/* <motion.div
+            className="CollectionItemMask absolute inset-0 bg-black/30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isDragging ? 1 : 0 }}
+            transition={{
+              duration: 0.15,
+              ease: 'easeInOut',
+            }}
+          ></motion.div> */}
+        </div>
+        <figcaption
+          className={mcn(
+            'CollectionItemName text-center text-xs text-gray-500 truncate transition-opacity duration-100 ease-linear',
+            isDragEnter && 'opacity-0',
+          )}
         >
           {name}
-        </motion.figcaption>
-      </motion.figure>
-      {isGroup && (
-        <Modal
-          isOpen={isOpen}
-          backdrop="blur"
-          classNames={{
-            base: 'bg-transparent shadow-none',
-            header: 'justify-center',
-          }}
-          hideCloseButton={true}
-          radius="lg"
-          size="5xl"
-          onOpenChange={onOpenChange}
-        >
-          <ModalContent>
-            <ModalHeader>
-              <h1 className="mb-4 text-center text-white text-2xl font-semibold">{name}</h1>
-            </ModalHeader>
-            <ModalBody>
-              <ul
-                ref={collectionsListRef}
-                className="CollectionsList flex-1 grid grid-cols-8 grid-rows-5 gap-6 p-8 w-full bg-white/40 rounded-3xl"
-              >
-                {(children as CollectionItem[]).map((item) => (
-                  <CollectionItem key={item.id} data={item} parentRef={collectionsListRef} />
-                ))}
-              </ul>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
-    </motion.li>
+        </figcaption>
+      </figure>
+    </li>
   );
 };
 
 interface CollectionsProviderProps {
-  collections: RootCollection;
-  draggingItem: CollectionItem | CollectionGroupItem | null;
-  mouseEnterItem: CollectionItem | CollectionGroupItem | null;
-  setCollections: (collections: RootCollection) => void;
-  setDraggingItem: (item: CollectionItem | CollectionGroupItem | null) => void;
-  setMouseEnterItem: (item: CollectionItem | CollectionGroupItem | null) => void;
+  dragEvent: DragEvent | null;
+  itemLayout: ItemLayout | null;
+  setDragEvent: (dragEvent: DragEvent) => void;
+  setItemLayout: (itemLayout: ItemLayout) => void;
 }
 
 const CollectionsContext = createContext<CollectionsProviderProps>({
-  collections: [],
-  draggingItem: null,
-  mouseEnterItem: null,
-  setCollections: () => {},
-  setDraggingItem: () => {},
-  setMouseEnterItem: () => {},
+  dragEvent: null,
+  itemLayout: null,
+  setDragEvent: () => {},
+  setItemLayout: () => {},
 });
 
 const CollectionsContainer = () => {
   const collectionsListRef = useRef<HTMLUListElement>(null);
 
-  const [collections, setCollections] = useState<RootCollection>([...Collections]);
-  const [draggingItem, setDraggingItem] = useState<CollectionItem | CollectionGroupItem | null>(
-    null,
-  );
-  const [mouseEnterItem, setMouseEnterItem] = useState<CollectionItem | CollectionGroupItem | null>(
-    null,
-  );
+  const sortableInst = useRef<Sortable | null>(null);
+
+  const [collections, setCollections] = useState<Collection[]>(() => [...Collections]);
+  const [itemLayout, setItemLayout] = useState<ItemLayout | null>(null);
+  const [dragEvent, setDragEvent] = useState<DragEvent | null>(null);
+  const [draggingItem, setDraggingItem] = useState<Collection | null>(null);
+  const [dragEnterItem, setDragEnterItem] = useState<Collection | null>(null);
+
+  useEffect(() => {
+    if (!collectionsListRef.current) return;
+
+    const { height: rootHeight, width: rootWidth } =
+      collectionsListRef.current!.getBoundingClientRect();
+
+    const cols = 9;
+    const colsWidth = rootWidth / cols;
+    const colsHeight = colsWidth;
+    const rows = Math.floor(rootHeight / colsWidth);
+    const pages = Math.ceil(collections.length / (cols * rows));
+    const width = (colsWidth / 5) * 3;
+
+    setItemLayout({
+      height: colsHeight,
+      mx: (colsWidth - width) / 2,
+      pages,
+      width: width,
+    });
+  }, [collections]);
+
+  useEffect(() => {
+    if (!collectionsListRef.current) return;
+
+    if (sortableInst.current) {
+      sortableInst.current.destroy();
+      sortableInst.current = null;
+    }
+
+    sortableInst.current = new Sortable(collectionsListRef.current, {
+      animation: 150,
+      group: {
+        name: 'Collections',
+        pull: 'clone',
+        put: false,
+      },
+      onChange: () => {
+        setDragEnterItem(null);
+      },
+      onChoose: (evt: Sortable.SortableEvent) => {
+        setDraggingItem(() => collections[evt.oldDraggableIndex!]);
+      },
+      onEnd: (evt: Sortable.SortableEvent) => {
+        const { newDraggableIndex, oldDraggableIndex } = evt;
+
+        // 必须用计算式写法，否则更新collections有问题
+        setCollections((oldCollections) => {
+          const newCollections = [...oldCollections];
+
+          newCollections.splice(
+            newDraggableIndex!,
+            0,
+            newCollections.splice(oldDraggableIndex!, 1)[0],
+          );
+
+          return newCollections;
+        });
+        setDraggingItem(null);
+      },
+      swapThreshold: 0.05,
+    });
+  }, [collections]);
 
   return (
-    <div className="Collections flex-none flex flex-col px-8 py-4 w-2/3 bg-blue-200">
+    <div className="Collections flex-none flex flex-col p-8 w-2/3 bg-blue-200">
       <div className="CollectionsSearch flex items-center justify-center mb-4">
         <input
           className="px-4 w-1/3 h-8 rounded-md focus:outline-none text-sm"
@@ -784,21 +703,27 @@ const CollectionsContainer = () => {
       </div>
       <CollectionsContext.Provider
         value={{
-          collections,
-          draggingItem,
-          mouseEnterItem,
-          setCollections,
-          setDraggingItem,
-          setMouseEnterItem,
+          dragEvent,
+          itemLayout,
+          setDragEvent,
+          setItemLayout,
         }}
       >
         <ul
           ref={collectionsListRef}
-          className="CollectionsList flex-1 grid grid-cols-10 grid-rows-4 mx-auto p-4 w-full h-0 bg-yellow-200"
+          className="CollectionsList flex-1 mx-auto w-full h-0 bg-yellow-200"
         >
-          {collections.map((item) => (
-            <CollectionItem key={item.id} data={item} parentRef={collectionsListRef} />
-          ))}
+          {itemLayout &&
+            collections.map((item) => (
+              <CollectionItem
+                key={item.id}
+                data={item}
+                draggingItem={draggingItem}
+                dragEnterItem={dragEnterItem}
+                setDragEnterItem={setDragEnterItem}
+                itemLayout={itemLayout}
+              />
+            ))}
         </ul>
       </CollectionsContext.Provider>
     </div>
