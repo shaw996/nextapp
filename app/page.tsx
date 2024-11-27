@@ -1,12 +1,13 @@
 'use client';
 
-import type { Dispatch, DragEvent, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { createContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import Sortable from 'sortablejs';
 
+import { nextTick, on } from '@/utils/dom';
 import mcn from '@/utils/mcn';
 
 export default function Home() {
@@ -213,7 +214,6 @@ interface CollectionBase {
   groupId: string;
   id: string;
   name: string;
-  ref?: HTMLDivElement;
 }
 
 interface CollectionItem extends CollectionBase {
@@ -440,36 +440,30 @@ const Collections: Collection[] = [
   },
 ];
 
-const CollectionItem = ({
-  data,
-  dragEnterItem,
-  itemLayout,
-  setDragEnterItem,
-}: {
-  data: Collection;
-  dragEnterItem: Collection | null;
-  setDragEnterItem: Dispatch<SetStateAction<Collection | null>>;
-  draggingItem: Collection | null;
-  itemLayout: ItemLayout;
-}) => {
-  const { height, mx, width } = itemLayout;
+let dragEnterTimer: NodeJS.Timeout | null = null;
+
+const CollectionItem = ({ data }: { data: Collection }) => {
   const { children, id, logo, name } = data as CollectionGroup & CollectionItem;
 
-  const collectionItemRef = useRef<HTMLDivElement>(null);
-  const fakeChildrenListRef = useRef<HTMLUListElement>(null);
-  const firstAnchorRef = useRef<HTMLLIElement>(null);
-  const lastAnchorRef = useRef<HTMLLIElement>(null);
-  const sortableInst = useRef<Sortable | null>(null);
+  const {
+    collections,
+    dragEnterItem,
+    dragItem,
+    itemLayout,
+    setCollections,
+    setDragEnterItem,
+    setDragItem,
+  } = useContext(CollectionsContext);
 
+  const isGroup = !!children;
+  const isDragging = dragItem && dragItem.id === id;
   const isDragEnter = dragEnterItem && dragEnterItem.id === id;
 
-  const isItem = !children;
+  const { height, mx, width } = itemLayout!;
 
-  useEffect(() => {
-    if (collectionItemRef.current) {
-      data.ref = collectionItemRef.current;
-    }
-  }, [data]);
+  const draggableRef = useRef<HTMLLIElement>(null);
+  const firstAnchorRef = useRef<HTMLLIElement>(null);
+  const lastAnchorRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     if (isDragEnter) {
@@ -480,70 +474,146 @@ const CollectionItem = ({
   }, [isDragEnter]);
 
   useEffect(() => {
-    if (!children || !fakeChildrenListRef.current) {
-      return;
-    }
+    if (!draggableRef.current) return;
 
-    if (sortableInst.current) {
-      sortableInst.current.destroy();
-      sortableInst.current = null;
-    }
-
-    sortableInst.current = new Sortable(fakeChildrenListRef.current, {
-      animation: 150,
-      group: {
-        name: 'Collections',
-        pull: false,
-      },
-      // TODO onAdd: (evt: Sortable.SortableEvent) => {
-      onAdd: () => {
-        setDragEnterItem(null);
-      },
-      // TODO onChange: (evt: Sortable.SortableEvent) => {
-      onChange: () => {
-        setDragEnterItem(() => data);
-      },
-      sort: false,
+    const offDragStart = on(draggableRef.current, 'dragstart', () => {
+      setDragItem(data);
     });
-  }, [children, data, setDragEnterItem]);
+
+    const offDragEnter = on(draggableRef.current, 'dragenter', () => {
+      if (dragItem && dragItem.id !== id && !(dragItem as CollectionGroup).children) {
+        if (dragEnterTimer) {
+          clearTimeout(dragEnterTimer);
+          dragEnterTimer = null;
+        }
+
+        dragEnterTimer = setTimeout(() => {
+          setDragEnterItem(data);
+          dragEnterTimer = null;
+        }, 500);
+      }
+    });
+
+    const offDrop = on(draggableRef.current, 'drop', () => {
+      if (
+        dragItem &&
+        dragItem.id !== id &&
+        !(dragItem as CollectionGroup).children &&
+        dragEnterItem &&
+        dragEnterItem.id === id
+      ) {
+        const newGroup: CollectionGroup = isGroup
+          ? {
+              ...data,
+              children: [...children, { ...(dragItem as CollectionItem) }],
+            }
+          : {
+              children: [
+                { ...(data as CollectionItem) },
+                {
+                  ...(dragItem as CollectionItem),
+                },
+              ],
+              groupId: '0',
+              id: new Date().getTime().toString(),
+              name: '新建分组',
+            };
+
+        nextTick(() => {
+          const newCollections = [...collections];
+          const removeItemIndex = newCollections.findIndex((item) => item.id === dragItem.id);
+
+          newCollections.splice(removeItemIndex, 1);
+
+          const newGroupIndex = newCollections.findIndex((item) => item.id === id);
+
+          newCollections.splice(newGroupIndex, 1, newGroup);
+          setCollections(newCollections);
+        });
+
+        setDragItem(null);
+        setDragEnterItem(null);
+      }
+    });
+
+    return () => {
+      if (dragEnterTimer) {
+        clearTimeout(dragEnterTimer);
+        dragEnterTimer = null;
+      }
+
+      offDragStart();
+      offDragEnter();
+      offDrop();
+    };
+  }, [
+    children,
+    collections,
+    data,
+    dragEnterItem,
+    dragItem,
+    id,
+    isGroup,
+    setCollections,
+    setDragEnterItem,
+    setDragItem,
+  ]);
 
   return (
-    <li
+    <motion.li
       className="CollectionItem flex items-center justify-center float-left"
+      ref={draggableRef}
       style={{
         height: height,
         marginLeft: mx,
         marginRight: mx,
         width: width,
       }}
+      layout
+      exit={{
+        opacity: 0,
+        width: 0,
+      }}
+      transition={{
+        duration: 0.1,
+      }}
     >
       <figure
-        className={mcn(
-          'CollectionItemDraggable flex-none w-full bg-transparent cursor-pointer select-none',
-        )}
+        className={mcn('CollectionItemDraggable flex-none w-full bg-transparent select-none')}
       >
         <div
           className={mcn(
-            'flex items-center justify-center relative mb-[10%] w-full rounded-[22%] shadow-md overflow-hidden transition-transform duration-100 ease-linear',
+            'flex items-center justify-center relative mb-[10%] w-full shadow-md rounded-[22%] overflow-hidden transition-all duration-100 ease-linear',
             isDragEnter && 'scale-125',
+            isDragEnter &&
+              !isGroup &&
+              'p-[10.5%] rounded-[32%] bg-white/50 backdrop-blur-3xl shadow-md',
           )}
-          ref={collectionItemRef}
         >
-          {isItem ? (
-            <Image
-              src={logo}
-              alt={name}
-              width={32}
-              height={32}
-              className="w-full bg-white pointer-events-none"
-            />
+          {!isGroup ? (
+            <div className="relative w-full aspect-square bg-white rounded-[22%] pointer-events-none overflow-hidden">
+              <Image
+                src={logo}
+                alt={name}
+                width={32}
+                height={32}
+                className="w-full aspect-square"
+              />
+
+              <div
+                className={mcn(
+                  'absolute inset-0 bg-black/20 opacity-0',
+                  (isDragEnter || isDragging) && 'opacity-100',
+                )}
+              ></div>
+            </div>
           ) : (
-            <div className="p-[12.5%] w-full aspect-square bg-white/50 backdrop-blur-md shadow-md overflow-hidden">
-              <ul className="relative grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden">
+            <div className="relative p-[12.5%] w-full aspect-square bg-white/50 backdrop-blur-3xl shadow-md rounded-[22%] overflow-hidden">
+              <ul className="grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden">
                 {children.map((item, i) => (
                   <li
                     key={item.id}
-                    className="CollectionItemChild flex-none w-full rounded-[22%] shadow-md overflow-hidden"
+                    className="CollectionItemChild flex-none w-full aspect-square rounded-[22%] shadow-md overflow-hidden"
                     ref={
                       i === 0 ? firstAnchorRef : i === children.length - 1 ? lastAnchorRef : null
                     }
@@ -557,39 +627,16 @@ const CollectionItem = ({
                     />
                   </li>
                 ))}
-
-                <ul
-                  className="absolute left-0 top-0 bottom-0 right-0 grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden"
-                  ref={fakeChildrenListRef}
-                >
-                  {Array(9)
-                    .fill(null)
-                    .map((item, i) => (
-                      <li
-                        key={i}
-                        className={mcn(
-                          'flex-none w-full rounded-[22%] shadow-md overflow-hidden',
-                          i === 8 ? 'FakeCollectionItemChildSortable' : 'FakeCollectionItemChild',
-                        )}
-                      >
-                        <div className="w-full aspect-square bg-[#bfa] pointer-events-none text-black text-[8px]">
-                          {i}
-                        </div>
-                      </li>
-                    ))}
-                </ul>
               </ul>
+
+              <div
+                className={mcn(
+                  'absolute inset-0 bg-black/20 opacity-0',
+                  isDragging && 'opacity-100',
+                )}
+              ></div>
             </div>
           )}
-          {/* <motion.div
-            className="CollectionItemMask absolute inset-0 bg-black/30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isDragging ? 1 : 0 }}
-            transition={{
-              duration: 0.15,
-              ease: 'easeInOut',
-            }}
-          ></motion.div> */}
         </div>
         <figcaption
           className={mcn(
@@ -600,34 +647,40 @@ const CollectionItem = ({
           {name}
         </figcaption>
       </figure>
-    </li>
+    </motion.li>
   );
 };
 
 interface CollectionsProviderProps {
-  dragEvent: DragEvent | null;
+  collections: Collection[];
+  dragItem: Collection | null;
+  dragEnterItem: Collection | null;
   itemLayout: ItemLayout | null;
-  setDragEvent: (dragEvent: DragEvent) => void;
+  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setDragItem: Dispatch<SetStateAction<Collection | null>>;
+  setDragEnterItem: Dispatch<SetStateAction<Collection | null>>;
   setItemLayout: (itemLayout: ItemLayout) => void;
 }
 
 const CollectionsContext = createContext<CollectionsProviderProps>({
-  dragEvent: null,
+  collections: [],
+  dragEnterItem: null,
+  dragItem: null,
   itemLayout: null,
-  setDragEvent: () => {},
+  setCollections: () => {},
+  setDragEnterItem: () => {},
+  setDragItem: () => {},
   setItemLayout: () => {},
 });
 
 const CollectionsContainer = () => {
   const collectionsListRef = useRef<HTMLUListElement>(null);
-
   const sortableInst = useRef<Sortable | null>(null);
 
   const [collections, setCollections] = useState<Collection[]>(() => [...Collections]);
-  const [itemLayout, setItemLayout] = useState<ItemLayout | null>(null);
-  const [dragEvent, setDragEvent] = useState<DragEvent | null>(null);
-  const [draggingItem, setDraggingItem] = useState<Collection | null>(null);
   const [dragEnterItem, setDragEnterItem] = useState<Collection | null>(null);
+  const [dragItem, setDragItem] = useState<Collection | null>(null);
+  const [itemLayout, setItemLayout] = useState<ItemLayout | null>(null);
 
   useEffect(() => {
     if (!collectionsListRef.current) return;
@@ -666,46 +719,55 @@ const CollectionsContainer = () => {
         put: false,
       },
       onChange: () => {
+        if (dragEnterTimer) {
+          clearTimeout(dragEnterTimer);
+          dragEnterTimer = null;
+        }
+
         setDragEnterItem(null);
       },
-      onChoose: (evt: Sortable.SortableEvent) => {
-        setDraggingItem(() => collections[evt.oldDraggableIndex!]);
-      },
-      onEnd: (evt: Sortable.SortableEvent) => {
+      onEnd: (evt) => {
         const { newDraggableIndex, oldDraggableIndex } = evt;
+        const newCollections = [...collections];
 
-        // 必须用计算式写法，否则更新collections有问题
-        setCollections((oldCollections) => {
-          const newCollections = [...oldCollections];
-
-          newCollections.splice(
-            newDraggableIndex!,
-            0,
-            newCollections.splice(oldDraggableIndex!, 1)[0],
-          );
-
-          return newCollections;
-        });
-        setDraggingItem(null);
+        newCollections.splice(
+          newDraggableIndex!,
+          0,
+          newCollections.splice(oldDraggableIndex!, 1)[0],
+        );
+        setCollections(newCollections);
+        setDragItem(null);
+        setDragEnterItem(null);
       },
       swapThreshold: 0.05,
+      touchStartThreshold: 10,
     });
   }, [collections]);
 
+  useEffect(() => {
+    if (!collectionsListRef.current) return;
+
+    const offDragEnd = on(collectionsListRef.current, 'dragend', () => {
+      setDragItem(null);
+      setDragEnterItem(null);
+    });
+
+    return () => {
+      offDragEnd();
+    };
+  }, []);
+
   return (
     <div className="Collections flex-none flex flex-col p-8 w-2/3 bg-blue-200">
-      <div className="CollectionsSearch flex items-center justify-center mb-4">
-        <input
-          className="px-4 w-1/3 h-8 rounded-md focus:outline-none text-sm"
-          placeholder="搜索收藏夹"
-          type="text"
-        />
-      </div>
       <CollectionsContext.Provider
         value={{
-          dragEvent,
+          collections,
+          dragEnterItem,
+          dragItem,
           itemLayout,
-          setDragEvent,
+          setCollections,
+          setDragEnterItem,
+          setDragItem,
           setItemLayout,
         }}
       >
@@ -713,17 +775,12 @@ const CollectionsContainer = () => {
           ref={collectionsListRef}
           className="CollectionsList flex-1 mx-auto w-full h-0 bg-yellow-200"
         >
-          {itemLayout &&
-            collections.map((item) => (
-              <CollectionItem
-                key={item.id}
-                data={item}
-                draggingItem={draggingItem}
-                dragEnterItem={dragEnterItem}
-                setDragEnterItem={setDragEnterItem}
-                itemLayout={itemLayout}
-              />
-            ))}
+          <AnimatePresence>
+            {itemLayout &&
+              collections.map((item) =>
+                item.groupId === '0' ? <CollectionItem key={item.id} data={item} /> : null,
+              )}
+          </AnimatePresence>
         </ul>
       </CollectionsContext.Provider>
     </div>
