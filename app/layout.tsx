@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import localFont from 'next/font/local';
+import Image from 'next/image';
 
 import './globals.css';
 
@@ -28,7 +29,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <header className="LayoutHeader sticky top-0 left-0 flex items-center w-full h-[54px] px-8 bg-[radial-gradient(transparent 1px, #fff 1px)] bg-[length:4px_4px] backdrop-blur-sm backdrop-saturate-50 shadow-sm">
+          <h3 className="text-lg font-semibold"></h3>
+          <Image
+            aria-hidden
+            src="/you.jpg"
+            alt="User avatar"
+            className="flex-none ml-auto w-8 h-8 rounded-full"
+            width={32}
+            height={32}
+          />
+        </header>
+        <main className="LayoutMain">{children}</main>
         <div className="flex-none inset-0 pointer-events-none fixed z-10">
           <div
             style={{
