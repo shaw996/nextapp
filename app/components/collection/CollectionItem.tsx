@@ -1,6 +1,6 @@
 import { AnimationControls, motion } from 'framer-motion';
 import Image from 'next/image';
-import { useContext, useEffect, useRef } from 'react';
+import { forwardRef, useContext, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { nextTick } from '@/utils/dom';
 import mcn from '@/utils/mcn';
@@ -13,15 +13,19 @@ import {
   computedShakingAnimate,
 } from './CollectionsContext';
 
-export default function CollItem({
-  allowDragEnter,
-  data,
-  size,
-}: {
-  allowDragEnter: boolean;
-  data: CollectionItem;
-  size?: 'sm';
-}) {
+const CollItem = forwardRef(function CollItem(
+  {
+    allowDragEnter,
+    data,
+
+    size,
+  }: {
+    allowDragEnter: boolean;
+    data: CollectionItem;
+    size?: 'sm';
+  },
+  ref?: React.Ref<HTMLLIElement | null>,
+) {
   const { id, logo, name, url } = data;
 
   const {
@@ -43,10 +47,15 @@ export default function CollItem({
 
   const shakingAnimate = computedShakingAnimate(isShouldShaking);
 
-  const draggableRef = useRef<HTMLLIElement>(null);
+  const draggableRef = useRef<HTMLLIElement | null>(null);
+
+  useImperativeHandle(ref, () => draggableRef.current);
+
   const firstAnchorRef = useRef<HTMLLIElement>(null);
   const lastAnchorRef = useRef<HTMLLIElement>(null);
   const mousedownTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Processing flags
   const isLongPress = useRef<boolean>(false);
 
   const removeItem = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -92,10 +101,10 @@ export default function CollItem({
   };
 
   // Drag enter event
-  const onDragEnter = () => {
-    if (!dragItem) {
-      return;
-    }
+  const onDragEnter = (e: React.DragEvent<HTMLLIElement>) => {
+    if (e.relatedTarget !== draggableRef.current) return;
+
+    if (!dragItem) return;
 
     if (!isDragging && allowDragEnter) {
       if (dragEnterTimer.current) {
@@ -111,7 +120,9 @@ export default function CollItem({
   };
 
   // Drag leave event
-  const onDragLeave = () => {
+  const onDragLeave = (e: React.DragEvent<HTMLLIElement>) => {
+    if (e.relatedTarget !== draggableRef.current) return;
+
     clearMousedownTimer();
 
     if (dragEnterItem && dragEnterItem.id === id) {
@@ -234,4 +245,6 @@ export default function CollItem({
       </motion.figure>
     </motion.li>
   );
-}
+});
+
+export default CollItem;

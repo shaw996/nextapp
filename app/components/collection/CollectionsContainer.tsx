@@ -2,6 +2,8 @@ import { AnimatePresence } from 'framer-motion';
 import { useContext, useEffect, useRef } from 'react';
 import Sortable from 'sortablejs';
 
+import mcn from '@/utils/mcn';
+
 import { CollGroup } from './CollectionGroup';
 import CollItem from './CollectionItem';
 import { CollectionGroup, CollectionItem, CollectionsContext } from './CollectionsContext';
@@ -75,13 +77,19 @@ export function CollContainer() {
     <div className="Collections flex-none flex p-8 w-2/3 bg-blue-200">
       <ul
         ref={collectionsListRef}
-        className="CollectionsList flex-1 grid auto-rows-max mx-auto grid-cols-5 gap-2 md:grid-cols-7 md:gap-4 lg:grid-cols-9 lg:gap-6"
+        className={mcn(
+          'CollectionsList w-full h-full grid auto-rows-max mx-auto grid-cols-5 gap-2 md:grid-cols-7 md:gap-4 lg:grid-cols-9 lg:gap-6',
+        )}
         onDragEnd={onDragEnd}
       >
         <AnimatePresence>
           {collections.map((item) =>
             (item as CollectionGroup).children ? (
-              <CollGroup key={item.id} data={item as CollectionGroup} />
+              <CollGroup
+                key={item.id}
+                data={item as CollectionGroup}
+                wrapRef={collectionsListRef}
+              />
             ) : (
               <CollItem key={item.id} allowDragEnter={true} data={item as CollectionItem} />
             ),

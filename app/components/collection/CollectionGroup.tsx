@@ -13,7 +13,13 @@ import {
   computedShakingAnimate,
 } from './CollectionsContext';
 
-export function CollGroup({ data }: { data: CollectionGroup }) {
+export function CollGroup({
+  data,
+  // wrapRef,
+}: {
+  data: CollectionGroup;
+  // wrapRef: RefObject<HTMLUListElement>;
+}) {
   const { children, id, name } = data;
 
   const {
@@ -22,6 +28,7 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
     dragEnterTimer,
     dragItem,
     isShaking,
+    // openedGroup,
     setCollections,
     setDragEnterItem,
     setDragItem,
@@ -33,6 +40,7 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
   const isDraggingGroup = dragItem && !!(dragItem as CollectionGroup).children;
   const isDragEnter = dragEnterItem && dragEnterItem.id === id;
   const isShouldShaking = !isDragging && !isDragEnter && isShaking;
+  // const isOpened = openedGroup && openedGroup.id === id;
 
   const shakingAnimate = computedShakingAnimate(isShouldShaking);
 
@@ -40,6 +48,8 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
   const firstAnchorRef = useRef<HTMLLIElement>(null);
   const lastAnchorRef = useRef<HTMLLIElement>(null);
   const mousedownTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Processing flags
   const isLongPress = useRef<boolean>(false);
 
   // Click event
@@ -80,10 +90,10 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
   };
 
   // Drag enter event
-  const onDragEnter = () => {
-    if (!dragItem) {
-      return;
-    }
+  const onDragEnter = (e: React.DragEvent<HTMLLIElement>) => {
+    if (e.relatedTarget !== draggableRef.current) return;
+
+    if (!dragItem && isDragEnter) return;
 
     if (!isDragging && !isDraggingGroup) {
       if (dragEnterTimer.current) {
@@ -93,16 +103,19 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
 
       dragEnterTimer.current = setTimeout(() => {
         setDragEnterItem(data);
+        // isEntering.current = true;
         dragEnterTimer.current = null;
       }, 500);
     }
   };
 
   // Drag leave event
-  const onDragLeave = () => {
+  const onDragLeave = (e: React.DragEvent<HTMLLIElement>) => {
+    if (e.relatedTarget !== draggableRef.current) return;
+
     clearMousedownTimer();
 
-    if (dragEnterItem && dragEnterItem.id === id) {
+    if (isDragEnter) {
       setDragEnterItem(null);
     }
   };
@@ -149,10 +162,12 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
     <>
       <motion.li
         className={mcn(
-          'CollectionGroup flex items-center justify-center float-left p-[12.5%] w-ful',
+          'CollectionGroup flex items-center justify-center relative float-left p-[12.5%] w-full',
+          // isOpened &&
+          //   wrapRef.current &&
+          //   `p-0 w-[${wrapRef.current.clientWidth}px] w-[${wrapRef.current.clientHeight}px]`,
         )}
         ref={draggableRef}
-        layout
         exit={{
           opacity: 0,
           width: 0,
@@ -182,8 +197,16 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
           >
             <div className="relative p-[12.5%] w-full aspect-square bg-white/50 backdrop-blur-3xl shadow-md rounded-[22%] overflow-hidden">
               <ul className="grid grid-cols-3 grid-rows-auto auto-rows-max gap-[8%] w-full h-full overflow-hidden">
-                {children.map((item) => (
-                  <CollItem key={item.id} allowDragEnter={false} data={item} size="sm" />
+                {children.map((item, i) => (
+                  <CollItem
+                    key={item.id}
+                    ref={
+                      i === 0 ? firstAnchorRef : i === children.length - 1 ? lastAnchorRef : null
+                    }
+                    allowDragEnter={false}
+                    data={item}
+                    size="sm"
+                  />
                 ))}
               </ul>
 
