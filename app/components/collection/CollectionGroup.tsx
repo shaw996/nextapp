@@ -162,7 +162,7 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
         >
           <div
             className={mcn(
-              'flex items-center justify-center relative mb-[10%] w-full shadow-md rounded-[22%] overflow-hidden transition-all duration-100 ease-linear',
+              'flex items-center justify-center relative w-full shadow-md rounded-[22%] overflow-hidden transition-all duration-100 ease-linear',
               isDragEnter && 'scale-125',
             )}
           >
@@ -183,7 +183,7 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
           </div>
           <figcaption
             className={mcn(
-              'hidden md:block CollectionGroupName text-center text-xs text-gray-500 truncate transition-opacity duration-100 ease-linear',
+              'CollectionGroupName hidden md:block mt-[10%] text-center text-xs text-gray-500 truncate transition-opacity duration-100 ease-linear',
               isDragEnter && 'opacity-0',
             )}
           >
