@@ -93,6 +93,10 @@ export default function CollItem({
 
   // Drag enter event
   const onDragEnter = () => {
+    if (!dragItem) {
+      return;
+    }
+
     if (!isDragging && allowDragEnter) {
       if (dragEnterTimer.current) {
         clearTimeout(dragEnterTimer.current);
@@ -103,6 +107,15 @@ export default function CollItem({
         setDragEnterItem(data);
         dragEnterTimer.current = null;
       }, 500);
+    }
+  };
+
+  // Drag leave event
+  const onDragLeave = () => {
+    clearMousedownTimer();
+
+    if (dragEnterItem && dragEnterItem.id === id) {
+      setDragEnterItem(null);
     }
   };
 
@@ -122,10 +135,10 @@ export default function CollItem({
         newCollections.splice(newGroupIndex, 1, newGroup);
         setCollections(newCollections);
       });
-
-      setDragItem(null);
-      setDragEnterItem(null);
     }
+
+    setDragItem(null);
+    setDragEnterItem(null);
   };
 
   // Clear mousedown timer
@@ -161,6 +174,7 @@ export default function CollItem({
       }}
       onDragStartCapture={onDragStart}
       onDragEnterCapture={onDragEnter}
+      onDragLeaveCapture={onDragLeave}
       onDropCapture={onDrop}
     >
       <motion.figure

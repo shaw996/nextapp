@@ -81,6 +81,10 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
 
   // Drag enter event
   const onDragEnter = () => {
+    if (!dragItem) {
+      return;
+    }
+
     if (!isDragging && !isDraggingGroup) {
       if (dragEnterTimer.current) {
         clearTimeout(dragEnterTimer.current);
@@ -91,6 +95,15 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
         setDragEnterItem(data);
         dragEnterTimer.current = null;
       }, 500);
+    }
+  };
+
+  // Drag leave event
+  const onDragLeave = () => {
+    clearMousedownTimer();
+
+    if (dragEnterItem && dragEnterItem.id === id) {
+      setDragEnterItem(null);
     }
   };
 
@@ -110,10 +123,10 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
         newCollections.splice(newGroupIndex, 1, newGroup);
         setCollections(newCollections);
       });
-
-      setDragItem(null);
-      setDragEnterItem(null);
     }
+
+    setDragItem(null);
+    setDragEnterItem(null);
   };
 
   // Clear mousedown timer
@@ -149,6 +162,7 @@ export function CollGroup({ data }: { data: CollectionGroup }) {
         }}
         onDragStartCapture={onDragStart}
         onDragEnterCapture={onDragEnter}
+        onDragLeaveCapture={onDragLeave}
         onDropCapture={onDrop}
       >
         <motion.figure
