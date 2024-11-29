@@ -41,11 +41,11 @@ export function CollContainer() {
     }
 
     sortableInst.current = new Sortable(collectionsListRef.current, {
-      animation: 150,
+      animation: 250,
+      easing: 'ease-in',
       group: {
         name: 'Collections',
-        pull: 'clone',
-        put: true,
+        put: false,
       },
       onChange: () => {
         if (dragEnterTimer.current) {
@@ -88,7 +88,7 @@ export function CollContainer() {
               <CollGroup
                 key={item.id}
                 data={item as CollectionGroup}
-                wrapRef={collectionsListRef}
+                // wrapRef={collectionsListRef}
               />
             ) : (
               <CollItem key={item.id} allowDragEnter={true} data={item as CollectionItem} />

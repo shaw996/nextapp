@@ -4,7 +4,6 @@ import { useContext, useEffect, useRef } from 'react';
 import { nextTick } from '@/utils/dom';
 import mcn from '@/utils/mcn';
 
-// import CollectionGroupModal from './CollectionGroupModal';
 import CollItem from './CollectionItem';
 import {
   CollectionGroup,
@@ -173,7 +172,7 @@ export function CollGroup({
           width: 0,
         }}
         transition={{
-          duration: 0.1,
+          duration: 0.2,
         }}
         onDragStartCapture={onDragStart}
         onDragEnterCapture={onDragEnter}
